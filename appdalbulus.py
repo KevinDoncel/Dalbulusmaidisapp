@@ -20,53 +20,45 @@ st.set_page_config(page_title="Monitoreo Dalbulus maidis", layout="wide")
 # ===========================================
 st.markdown("""
 <style>
-/* Ajuste general de márgenes y fuentes */
+/* Fuente y márgenes generales */
 body, html {
-  margin: 0;
-  padding: 0;
-  font-family: 'Helvetica', sans-serif;
+    margin: 0;
+    padding: 0;
+    font-family: 'Helvetica', sans-serif;
 }
 
-/* Título adaptable */
-h1 {
-  font-size: 2.2vw;
-}
-
+/* Encabezados */
+h1 { font-size: 2.2vw; }
 @media (max-width: 900px) {
-  h1 {
-    font-size: 4.5vw;
-    text-align: center;
-    line-height: 1.2;
-  }
-  img {
-    width: 90px !important;
-    margin-bottom: 10px;
-  }
+    h1 { font-size: 5vw; text-align: center; }
+    img { width: 80px !important; margin-bottom: 10px; }
 }
-
-/* Subtítulo adaptable */
-p {
-  font-size: 1vw;
-}
+p { font-size: 1vw; }
 @media (max-width: 900px) {
-  p {
-    font-size: 3.5vw;
-  }
+    p { font-size: 3.5vw; }
 }
 
-/* Ajuste del mapa para pantallas pequeñas */
+/* Mapas y contenedores */
 iframe {
-  width: 100% !important;
-  height: 75vh !important;
+    width: 100% !important;
+    height: 75vh !important;
+}
+
+/* Forzar visibilidad del control de capas */
+.leaflet-control-layers {
+    z-index: 9999 !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 10px !important;
 }
 
 /* Centrado del encabezado */
 .header-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -76,13 +68,11 @@ iframe {
 # ===========================================
 st.markdown("""
 <div class='header-container'>
-  <img src='https://fenalce.co/wp-content/uploads/2021/10/Logo_Fenalce_N-FNC-FNL-FNS_1-1-1.png' width='120' style='margin-right:20px;'>
-  <div>
-    <h1 style='color:#2E7D32; margin-bottom:0;'>🌽 Monitoreo geoespacial y temporal<br><i>Dalbulus maidis</i></h1>
-    <p style='color:gray; margin-top:5px;'>
-      Herramienta digital para visualizar datos espacio-temporales del complejo del achaparramiento del maíz
-    </p>
-  </div>
+    <img src='https://fenalce.co/wp-content/uploads/2021/10/Logo_Fenalce_N-FNC-FNL-FNS_1-1-1.png' width='120' style='margin-right:20px;'>
+    <div>
+        <h1 style='color:#2E7D32; margin-bottom:0;'>🌽 Monitoreo geoespacial y temporal<br><i>Dalbulus maidis</i></h1>
+        <p style='color:gray; margin-top:5px;'>Herramienta digital para visualizar datos espacio-temporales del complejo del achaparramiento del maíz</p>
+    </div>
 </div>
 <hr style='border:1px solid #ccc;'>
 """, unsafe_allow_html=True)
@@ -92,7 +82,6 @@ st.markdown("""
 # ===========================================
 with st.sidebar:
     st.header("📄 Formato de carga de datos")
-
     format_df = pd.DataFrame({
         "lat": [3.45, 3.46],
         "lon": [-76.53, -76.54],
@@ -101,7 +90,6 @@ with st.sidebar:
         "date2": ["2025-10-08", "2025-10-08"],
         "value2": [5, 10],
     })
-
     csv_format = format_df.to_csv(index=False).encode("utf-8")
     st.download_button(
         "⬇️ Descargar Formato CSV",
@@ -109,7 +97,6 @@ with st.sidebar:
         file_name="Formato_Monitoreo_Dalbulus.csv",
         mime="text/csv"
     )
-
     st.info("📂 Cargue su archivo CSV con columnas: lat, lon, dateN, valueN...")
 
 # ===========================================
@@ -120,12 +107,7 @@ uploaded_file = st.file_uploader("📂 Seleccione el archivo CSV", type="csv")
 # ===========================================
 # MAPA BASE
 # ===========================================
-m = folium.Map(
-    location=[3.45, -76.53],
-    zoom_start=8,
-    tiles="Esri.WorldImagery",
-    attr="Tiles © Esri"
-)
+m = folium.Map(location=[3.45, -76.53], zoom_start=8, tiles="Esri.WorldImagery", attr="Tiles © Esri")
 LocateControl(auto_start=False, flyTo=True).add_to(m)
 
 # ===========================================
@@ -133,28 +115,20 @@ LocateControl(auto_start=False, flyTo=True).add_to(m)
 # ===========================================
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-
-    capas = [(f"date{i}", f"value{i}") for i in range(1, 10)
-             if f"date{i}" in df.columns and f"value{i}" in df.columns]
+    capas = [(f"date{i}", f"value{i}") for i in range(1, 10) if f"date{i}" in df.columns and f"value{i}" in df.columns]
 
     if not capas:
         st.error("⚠️ El CSV debe contener al menos una pareja de columnas: date1 y value1")
     else:
-
         def crear_capa(df, date_col, value_col, nombre_capa):
             layer = folium.FeatureGroup(name=nombre_capa, show=False)
 
             def color_por_valor(val):
-                if val <= 1:
-                    return "blue"
-                elif val <= 3:
-                    return "green"
-                elif val == 4:
-                    return "yellow"
-                elif val <= 6:
-                    return "orange"
-                else:
-                    return "red"
+                if val <= 1: return "blue"
+                elif val <= 3: return "green"
+                elif val == 4: return "yellow"
+                elif val <= 6: return "orange"
+                else: return "red"
 
             for _, row in df.iterrows():
                 color = color_por_valor(row[value_col])
@@ -165,10 +139,11 @@ if uploaded_file is not None:
                     fill=True,
                     fill_color=color,
                     fill_opacity=0.85,
-                    popup=f"<b>📅 {row[date_col]}</b><br>Valor: {row[value_col]}"
-                          + ("<br><b style='color:red;'>🚨 Nivel ≥ 7</b>" if row[value_col] >= 7 else "")
+                    popup=f"<b>📅 {row[date_col]}</b><br>Valor: {row[value_col]}" +
+                          ("<br><b style='color:red;'>🚨 Nivel ≥ 7</b>" if row[value_col] >= 7 else "")
                 ).add_to(layer)
 
+            # Interpolación
             points = df[["lon", "lat"]].values
             values = df[value_col].values
             grid_lon = np.linspace(df["lon"].min(), df["lon"].max(), 200)
@@ -183,32 +158,19 @@ if uploaded_file is not None:
             cmap_custom = LinearSegmentedColormap.from_list("alerta", colors)
 
             fig, ax = plt.subplots(figsize=(6, 6), dpi=100)
-            ax.imshow(
-                grid_z,
-                extent=(df["lon"].min(), df["lon"].max(),
-                        df["lat"].min(), df["lat"].max()),
-                origin="lower",
-                cmap=cmap_custom,
-                alpha=0.6,
-                vmin=0, vmax=10
-            )
+            ax.imshow(grid_z, extent=(df["lon"].min(), df["lon"].max(),
+                    df["lat"].min(), df["lat"].max()), origin="lower",
+                    cmap=cmap_custom, alpha=0.6, vmin=0, vmax=10)
             ax.axis("off")
 
             buf = BytesIO()
-            plt.savefig(buf, format="png", bbox_inches="tight",
-                        pad_inches=0, transparent=True)
+            plt.savefig(buf, format="png", bbox_inches="tight", pad_inches=0, transparent=True)
             plt.close(fig)
-
             b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
             img_url = f"data:image/png;base64,{b64}"
-            bounds = [[df["lat"].min(), df["lon"].min()],
-                      [df["lat"].max(), df["lon"].max()]]
-
+            bounds = [[df["lat"].min(), df["lon"].min()], [df["lat"].max(), df["lon"].max()]]
             folium.raster_layers.ImageOverlay(
-                image=img_url,
-                bounds=bounds,
-                opacity=0.6,
-                name=f"Interpolación {nombre_capa}"
+                image=img_url, bounds=bounds, opacity=0.6, name=f"Interpolación {nombre_capa}"
             ).add_to(layer)
 
             layer.add_to(m)
@@ -216,7 +178,8 @@ if uploaded_file is not None:
         for i, (date_col, value_col) in enumerate(capas, start=1):
             crear_capa(df, date_col, value_col, f"Capa {i} - {date_col}")
 
-        folium.LayerControl(collapsed=True, position='bottomleft').add_to(m)
+        # 🔧 CONTROL DE CAPAS - visible en todos los dispositivos
+        folium.LayerControl(collapsed=False, position='topright').add_to(m)
 
         # ---------- GRÁFICO PROMEDIO TEMPORAL ----------
         melted = []
@@ -228,8 +191,8 @@ if uploaded_file is not None:
         df_plot = pd.concat(melted)
         df_plot["date"] = pd.to_datetime(df_plot["date"])
         df_mean = df_plot.groupby("date", as_index=False)["value"].mean()
-
         alerta = (df_mean["value"] >= 7).any()
+
         if alerta:
             st.markdown("""
             <div style='background-color:#ffcccc; color:#b71c1c; padding:10px; border-radius:8px; text-align:center; font-weight:bold;'>
@@ -240,43 +203,32 @@ if uploaded_file is not None:
             st.markdown("[📲 Enviar alerta por WhatsApp](https://wa.me/?text=🚨+Alerta:+Riesgo+alto+de+achaparramiento+detectado+en+su+finca)", unsafe_allow_html=True)
 
         def color_promedio(val):
-            if val <= 1:
-                return "blue"
-            elif val <= 3:
-                return "green"
-            elif val == 4:
-                return "yellow"
-            elif val <= 6:
-                return "orange"
-            else:
-                return "red"
+            if val <= 1: return "blue"
+            elif val <= 3: return "green"
+            elif val == 4: return "yellow"
+            elif val <= 6: return "orange"
+            else: return "red"
 
         colores = df_mean["value"].apply(color_promedio)
-
         st.markdown("<hr style='border:0.5px solid #ccc;'>", unsafe_allow_html=True)
         st.subheader("📈 Evolución temporal promedio de los valores monitoreados")
 
-        fig, ax = plt.subplots(figsize=(8, 4))
+        fig, ax = plt.subplots(figsize=(10, 4))  # más ancho
         for i in range(len(df_mean) - 1):
-            ax.plot(df_mean["date"].iloc[i:i+2],
-                    df_mean["value"].iloc[i:i+2],
+            ax.plot(df_mean["date"].iloc[i:i+2], df_mean["value"].iloc[i:i+2],
                     color=colores.iloc[i], linewidth=3)
-
-        ax.scatter(df_mean["date"], df_mean["value"],
-                   c=colores, s=80, edgecolor="black")
+        ax.scatter(df_mean["date"], df_mean["value"], c=colores, s=100, edgecolor="black")
         ax.set_xlabel("Fecha", fontsize=9)
         ax.set_ylabel("Promedio del valor monitoreado", fontsize=9)
-        ax.set_title("Comportamiento temporal promedio",
-                     fontsize=10, color="#2E7D32")
+        ax.set_title("Comportamiento temporal promedio", fontsize=10, color="#2E7D32")
         ax.grid(True, linestyle="--", alpha=0.4)
         ax.set_ylim(0, 10)
         plt.xticks(rotation=90, fontsize=8)
 
         for x, y, c in zip(df_mean["date"], df_mean["value"], colores):
-            ax.text(x, y + 0.2, f"{y:.1f}",
-                    ha="center", va="bottom", fontsize=8, color=c)
+            ax.text(x, y + 0.2, f"{y:.1f}", ha="center", va="bottom", fontsize=8, color=c)
 
-        st.pyplot(fig)
+        st.pyplot(fig, use_container_width=True)  # 🔧 ajusta a ancho de pantalla
 
 # ===========================================
 # MOSTRAR MAPA
