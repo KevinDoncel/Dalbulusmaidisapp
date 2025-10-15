@@ -48,18 +48,6 @@ iframe { width: 100% !important; height: 75vh !important; }
     justify-content: center;
     text-align: center;
 }
-/* 📱 Ajustes gráficos responsivos */
-@media (max-width: 900px) {
-    .stPlotlyChart, .stAltairChart, .stVegaLiteChart, .stpyplot, .stImage {
-        width: 100% !important;
-        height: auto !important;
-        display: block !important;
-        margin: 0 auto !important;
-    }
-    .stpyplot > div, .stImage > div {
-        min-height: 250px !important;
-    }
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -236,7 +224,7 @@ if uploaded_file is not None:
         st.markdown("<hr style='border:0.5px solid #ccc;'>", unsafe_allow_html=True)
         st.subheader("📈 Evolución temporal promedio de los valores monitoreados")
 
-        # ✅ NUEVA VERSIÓN DEL GRÁFICO - FULL RESPONSIVE
+        # ✅ NUEVA VERSIÓN DEL GRÁFICO - FULL WIDTH (100vw)
         fig, ax = plt.subplots(figsize=(10, 6))
         for i in range(len(df_mean) - 1):
             ax.plot(df_mean["date"].iloc[i:i+2], df_mean["value"].iloc[i:i+2],
@@ -254,8 +242,27 @@ if uploaded_file is not None:
             ax.text(x, y + 0.25, f"{y:.1f}", ha="center",
                     va="bottom", fontsize=9, color=c, fontweight="bold")
 
-        # Streamlit ajusta el ancho automáticamente según el dispositivo
-        st.pyplot(fig, use_container_width=True)
+        buf = BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight", dpi=250)
+        plt.close(fig)
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+
+        st.markdown(f"""
+        <div style='
+            width: 100vw;
+            max-width: 100%;
+            margin-left: -2rem;
+            margin-right: -2rem;
+            text-align: center;
+        '>
+            <img src="data:image/png;base64,{b64}" style="
+                width: 100%;
+                height: auto;
+                border-radius: 12px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            ">
+        </div>
+        """, unsafe_allow_html=True)
 
 # ===========================================
 # MOSTRAR MAPA
