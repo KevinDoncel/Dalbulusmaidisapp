@@ -25,23 +25,16 @@ body, html {
     padding: 0;
     font-family: 'Helvetica', sans-serif;
 }
-h1 {
-    font-size: 2.2vw;
-}
+h1 { font-size: 2.2vw; }
 @media (max-width: 900px) {
     h1 { font-size: 5vw; text-align: center; }
     img { width: 80px !important; margin-bottom: 10px; }
 }
-p {
-    font-size: 1vw;
-}
+p { font-size: 1vw; }
 @media (max-width: 900px) {
     p { font-size: 3.5vw; }
 }
-iframe {
-    width: 100% !important;
-    height: 75vh !important;
-}
+iframe { width: 100% !important; height: 75vh !important; }
 .leaflet-control-layers {
     z-index: 9999 !important;
     position: absolute !important;
@@ -55,7 +48,6 @@ iframe {
     justify-content: center;
     text-align: center;
 }
-
 /* 📱 Ajustes gráficos responsivos */
 @media (max-width: 900px) {
     .stPlotlyChart, .stAltairChart, .stVegaLiteChart, .stpyplot, .stImage {
@@ -72,7 +64,7 @@ iframe {
 """, unsafe_allow_html=True)
 
 # ===========================================
-# ENCABEZADO CON LOGO Y TÍTULO
+# ENCABEZADO
 # ===========================================
 st.markdown("""
 <div class='header-container'>
@@ -86,7 +78,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ===========================================
-# SIDEBAR: DESCARGA DE FORMATO BASE
+# SIDEBAR
 # ===========================================
 with st.sidebar:
     st.header("📄 Formato de carga de datos")
@@ -108,7 +100,7 @@ with st.sidebar:
     st.info("📂 Cargue su archivo CSV con columnas: lat, lon, dateN, valueN...")
 
 # ===========================================
-# SUBIR ARCHIVO CSV
+# SUBIR ARCHIVO
 # ===========================================
 uploaded_file = st.file_uploader("📂 Seleccione el archivo CSV", type="csv")
 
@@ -241,21 +233,18 @@ if uploaded_file is not None:
             else: return "red"
 
         colores = df_mean["value"].apply(color_promedio)
-        st.markdown("<hr style='border:0.5px solid #ccc;'>",
-                    unsafe_allow_html=True)
+        st.markdown("<hr style='border:0.5px solid #ccc;'>", unsafe_allow_html=True)
         st.subheader("📈 Evolución temporal promedio de los valores monitoreados")
 
-        # Figura más equilibrada para todos los dispositivos
-        fig, ax = plt.subplots(figsize=(8, 5))
+        # ✅ NUEVA VERSIÓN DEL GRÁFICO - FULL RESPONSIVE
+        fig, ax = plt.subplots(figsize=(10, 6))
         for i in range(len(df_mean) - 1):
             ax.plot(df_mean["date"].iloc[i:i+2], df_mean["value"].iloc[i:i+2],
                     color=colores.iloc[i], linewidth=4)
-        ax.scatter(df_mean["date"], df_mean["value"],
-                   c=colores, s=120, edgecolor="black")
+        ax.scatter(df_mean["date"], df_mean["value"], c=colores, s=120, edgecolor="black")
         ax.set_xlabel("Fecha", fontsize=11)
         ax.set_ylabel("Promedio del valor monitoreado", fontsize=11)
-        ax.set_title("Comportamiento temporal promedio",
-                     fontsize=13, color="#2E7D32", pad=15)
+        ax.set_title("Comportamiento temporal promedio", fontsize=13, color="#2E7D32", pad=15)
         ax.grid(True, linestyle="--", alpha=0.4)
         ax.set_ylim(0, 10)
         plt.xticks(rotation=90, fontsize=9)
@@ -265,17 +254,8 @@ if uploaded_file is not None:
             ax.text(x, y + 0.25, f"{y:.1f}", ha="center",
                     va="bottom", fontsize=9, color=c, fontweight="bold")
 
-        buf = BytesIO()
-        plt.savefig(buf, format="png", bbox_inches="tight", dpi=200)
-        plt.close(fig)
-        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-
-        # Contenedor adaptable
-        st.markdown(f"""
-        <div style='text-align:center; width:100%; max-width:900px; margin:auto;'>
-            <img src="data:image/png;base64,{b64}" style="width:100%; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
-        </div>
-        """, unsafe_allow_html=True)
+        # Streamlit ajusta el ancho automáticamente según el dispositivo
+        st.pyplot(fig, use_container_width=True)
 
 # ===========================================
 # MOSTRAR MAPA
@@ -294,7 +274,3 @@ Desarrollado por <b>Kevin Doncel Yela</b> — Equipo Técnico <b>FENALCE Regiona
 Agricultura Digital y Regenerativa
 </p>
 """, unsafe_allow_html=True)
-
-
-
-
