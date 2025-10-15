@@ -48,18 +48,6 @@ iframe { width: 100% !important; height: 75vh !important; }
     justify-content: center;
     text-align: center;
 }
-/* 📱 Ajustes gráficos responsivos */
-@media (max-width: 900px) {
-    .stPlotlyChart, .stAltairChart, .stVegaLiteChart, .stpyplot, .stImage {
-        width: 100% !important;
-        height: auto !important;
-        display: block !important;
-        margin: 0 auto !important;
-    }
-    .stpyplot > div, .stImage > div {
-        min-height: 250px !important;
-    }
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -236,7 +224,7 @@ if uploaded_file is not None:
         st.markdown("<hr style='border:0.5px solid #ccc;'>", unsafe_allow_html=True)
         st.subheader("📈 Evolución temporal promedio de los valores monitoreados")
 
-        # ✅ VERSIÓN OPTIMIZADA DEL GRÁFICO (RESPONSIVE Y COMPLETA)
+        # ✅ NUEVA VERSIÓN DEL GRÁFICO (RESPONSIVE Y ESCALABLE)
         fig, ax = plt.subplots(figsize=(8, 4))
         for i in range(len(df_mean) - 1):
             ax.plot(df_mean["date"].iloc[i:i+2],
@@ -247,17 +235,19 @@ if uploaded_file is not None:
                    c=colores, s=80, edgecolor="black")
         ax.set_xlabel("Fecha", fontsize=9)
         ax.set_ylabel("Promedio del valor monitoreado", fontsize=9)
-        ax.set_title("Comportamiento temporal promedio",
-                     fontsize=10, color="#2E7D32")
+        ax.set_title("Comportamiento temporal promedio", fontsize=10, color="#2E7D32")
         ax.grid(True, linestyle="--", alpha=0.4)
         ax.set_ylim(0, 10)
         plt.xticks(rotation=90, fontsize=8)
-
         for x, y, c in zip(df_mean["date"], df_mean["value"], colores):
             ax.text(x, y + 0.2, f"{y:.1f}",
                     ha="center", va="bottom", fontsize=8, color=c)
 
-        st.pyplot(fig, use_container_width=True)
+        buf = BytesIO()
+        plt.savefig(buf, format="png", bbox_inches="tight", dpi=150)
+        buf.seek(0)
+        st.image(buf, use_container_width=True)
+        plt.close(fig)
 
 # ===========================================
 # MOSTRAR MAPA
