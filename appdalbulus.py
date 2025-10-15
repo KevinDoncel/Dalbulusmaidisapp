@@ -55,6 +55,19 @@ iframe {
     justify-content: center;
     text-align: center;
 }
+
+/* 📱 Ajustes gráficos responsivos */
+@media (max-width: 900px) {
+    .stPlotlyChart, .stAltairChart, .stVegaLiteChart, .stpyplot, .stImage {
+        width: 100% !important;
+        height: auto !important;
+        display: block !important;
+        margin: 0 auto !important;
+    }
+    .stpyplot > div, .stImage > div {
+        min-height: 250px !important;
+    }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -232,7 +245,8 @@ if uploaded_file is not None:
                     unsafe_allow_html=True)
         st.subheader("📈 Evolución temporal promedio de los valores monitoreados")
 
-        fig, ax = plt.subplots(figsize=(12, 5))
+        # Figura más equilibrada para todos los dispositivos
+        fig, ax = plt.subplots(figsize=(8, 5))
         for i in range(len(df_mean) - 1):
             ax.plot(df_mean["date"].iloc[i:i+2], df_mean["value"].iloc[i:i+2],
                     color=colores.iloc[i], linewidth=4)
@@ -256,9 +270,10 @@ if uploaded_file is not None:
         plt.close(fig)
         b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
 
+        # Contenedor adaptable
         st.markdown(f"""
-        <div style='text-align:center;'>
-            <img src="data:image/png;base64,{b64}" style="width:100%; max-width:900px; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
+        <div style='text-align:center; width:100%; max-width:900px; margin:auto;'>
+            <img src="data:image/png;base64,{b64}" style="width:100%; border-radius:12px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">
         </div>
         """, unsafe_allow_html=True)
 
@@ -279,5 +294,7 @@ Desarrollado por <b>Kevin Doncel Yela</b> — Equipo Técnico <b>FENALCE Regiona
 Agricultura Digital y Regenerativa
 </p>
 """, unsafe_allow_html=True)
+
+
 
 
