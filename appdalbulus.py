@@ -48,6 +48,16 @@ iframe { width: 100% !important; height: 75vh !important; }
     justify-content: center;
     text-align: center;
 }
+.responsive-plot {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+.responsive-plot img {
+    max-width: 100%;
+    height: auto;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -115,15 +125,15 @@ if uploaded_file is not None:
         st.error("⚠️ El CSV debe contener al menos una pareja de columnas: date1 y value1")
     else:
 
+        def color_por_valor(val):
+            if val <= 1: return "blue"
+            elif val <= 3: return "green"
+            elif val == 4: return "yellow"
+            elif val <= 6: return "orange"
+            else: return "red"
+
         def crear_capa(df, date_col, value_col, nombre_capa):
             layer = folium.FeatureGroup(name=nombre_capa, show=False)
-
-            def color_por_valor(val):
-                if val <= 1: return "blue"
-                elif val <= 3: return "green"
-                elif val == 4: return "yellow"
-                elif val <= 6: return "orange"
-                else: return "red"
 
             for _, row in df.iterrows():
                 color = color_por_valor(row[value_col])
@@ -185,12 +195,15 @@ if uploaded_file is not None:
             ).add_to(layer)
             layer.add_to(m)
 
+        # Crear capas
         for i, (date_col, value_col) in enumerate(capas, start=1):
             crear_capa(df, date_col, value_col, f"Capa {i} - {date_col}")
 
         folium.LayerControl(collapsed=False, position='topright').add_to(m)
 
-        # ---------- GRÁFICO PROMEDIO TEMPORAL ----------
+        # ===========================================
+        # GRÁFICO TEMPORAL PROMEDIO
+        # ===========================================
         melted = []
         for i, (date_col, value_col) in enumerate(capas, start=1):
             temp = df[["lat", "lon", date_col, value_col]].rename(
@@ -213,26 +226,18 @@ if uploaded_file is not None:
                 unsafe_allow_html=True
             )
 
-        def color_promedio(val):
-            if val <= 1: return "blue"
-            elif val <= 3: return "green"
-            elif val == 4: return "yellow"
-            elif val <= 6: return "orange"
-            else: return "red"
-
-        colores = df_mean["value"].apply(color_promedio)
+        colores = df_mean["value"].apply(color_por_valor)
         st.markdown("<hr style='border:0.5px solid #ccc;'>", unsafe_allow_html=True)
         st.subheader("📈 Evolución temporal promedio de los valores monitoreados")
 
-        # ✅ NUEVA VERSIÓN DEL GRÁFICO (RESPONSIVE Y ESCALABLE)
-        fig, ax = plt.subplots(figsize=(8, 4))
+        fig, ax = plt.subplots(figsize=(10, 4))
         for i in range(len(df_mean) - 1):
             ax.plot(df_mean["date"].iloc[i:i+2],
                     df_mean["value"].iloc[i:i+2],
                     color=colores.iloc[i], linewidth=3)
 
         ax.scatter(df_mean["date"], df_mean["value"],
-                   c=colores, s=80, edgecolor="black")
+                   c=colores, s=90, edgecolor="black")
         ax.set_xlabel("Fecha", fontsize=9)
         ax.set_ylabel("Promedio del valor monitoreado", fontsize=9)
         ax.set_title("Comportamiento temporal promedio", fontsize=10, color="#2E7D32")
@@ -240,13 +245,14 @@ if uploaded_file is not None:
         ax.set_ylim(0, 10)
         plt.xticks(rotation=90, fontsize=8)
         for x, y, c in zip(df_mean["date"], df_mean["value"], colores):
-            ax.text(x, y + 0.2, f"{y:.1f}",
-                    ha="center", va="bottom", fontsize=8, color=c)
+            ax.text(x, y + 0.2, f"{y:.1f}", ha="center", va="bottom", fontsize=8, color=c)
 
         buf = BytesIO()
         plt.savefig(buf, format="png", bbox_inches="tight", dpi=150)
         buf.seek(0)
+        st.markdown("<div class='responsive-plot'>", unsafe_allow_html=True)
         st.image(buf, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
         plt.close(fig)
 
 # ===========================================
